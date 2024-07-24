@@ -1,0 +1,18 @@
+import express from 'express';
+import {
+  createUser,
+  deleteUser,
+  getAllUsers,
+  getUser,
+  updateUser,
+} from '../controllers/userController';
+import { checkID } from '../controllers/tourController';
+const router = express.Router();
+
+router.param('id', checkID);
+
+router.route('/').get(getAllUsers).post(createUser);
+
+router.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
+
+export default router;
