@@ -7,7 +7,6 @@ export const createEmployees = async (req, res) => {
     res.status(200).json({
       success: true,
       status: 200,
-      status: 200,
 
       message: 'Employees Added Successfully',
       data: {
