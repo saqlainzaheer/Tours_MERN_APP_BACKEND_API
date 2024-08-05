@@ -5,12 +5,5 @@ import employeeRouter from './routes/employeeRoutes.js';
 export const app = express();
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.status(200).send({
-    status: 'success',
-    data: 'asdasd',
-  });
-});
-
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/employee', employeeRouter);

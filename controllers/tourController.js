@@ -98,6 +98,7 @@
 //     data: null,
 //   });
 
+import { json } from 'express';
 import { Tour } from '../models/Tour.js';
 
 export const createTour = async (req, res) => {
@@ -119,7 +120,18 @@ export const createTour = async (req, res) => {
 
 export const getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    const query_obj = { ...req.query };
+    const exclude_quer_fields = ['page', 'sort', 'limit', 'filter'];
+
+    exclude_quer_fields.forEach((el) => delete query_obj[el]);
+
+    let querStr = JSON.stringify(query_obj);
+    querStr = JSON.parse(
+      querStr.replace(/\b(gte|lte|gt|lt)\b/g, (match) => `$${match}`)
+    );
+    // JSON.parse(querStr)
+
+    const tours = await Tour.find(querStr);
 
     res.status(200).json({
       success: true,
@@ -136,6 +148,7 @@ export const getAllTours = async (req, res) => {
 
 export const getTour = async (req, res) => {
   try {
+    console.log(req.query);
     const tour = await Tour.findById(req.params.id);
 
     res.status(200).json({
