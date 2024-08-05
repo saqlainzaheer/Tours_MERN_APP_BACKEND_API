@@ -30,7 +30,18 @@ const import_tour = async () => {
     console.log(err);
   }
 };
+const delete_tour = async () => {
+  try {
+    await Tour.deleteMany();
+    console.log('Data successfully deleted');
+  } catch (err) {
+    console.log(err);
+  }
+  // process.end();
+};
 
 if (process.argv[2] === '--import') {
   import_tour();
+} else if (process.argv[2] === '--delete') {
+  delete_tour();
 }
