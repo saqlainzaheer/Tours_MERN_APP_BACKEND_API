@@ -98,8 +98,56 @@
 //     data: null,
 //   });
 
-import { json } from 'express';
+// import { json } from 'express';
+import { ApiFeatures } from '../lib/Apifeature.js';
 import { Tour } from '../models/Tour.js';
+
+//cheap tour middlewear
+export const getCheapTour = async (req, res, next) => {
+  req.query.sort = 'price';
+  req.query.limit = '5';
+  next();
+};
+
+//get stats  of tours  agregation piepline
+
+export const getTourStats = async (req, res) => {
+  try {
+    // Initialize ApiFeatures to handle sorting and pagination for stats
+    const feature = new ApiFeatures(
+      Tour.aggregate([
+        { $match: { ratingsAverage: { $gte: 4.5 } } },
+        {
+          $group: {
+            _id: '$difficulty',
+            avgRating: { $avg: '$ratingsAverage' },
+            avgPricee: { $avg: '$price' },
+            minprice: { $min: '$price' },
+            maxPrice: { $max: '$price' },
+          },
+        },
+        // { sort:  },
+      ]),
+      req.query
+    )
+      .sort() // Apply sorting
+      .pagination(); // Apply pagination
+
+    // Retrieve aggregated statistics with applied sorting and pagination
+    const stats = await feature.query;
+
+    res.status(200).json({
+      status: true,
+      result: stats.length,
+      data: stats,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
 
 export const createTour = async (req, res) => {
   try {
@@ -120,19 +168,15 @@ export const createTour = async (req, res) => {
 
 export const getAllTours = async (req, res) => {
   try {
-    const query_obj = { ...req.query };
-    const exclude_quer_fields = ['page', 'sort', 'limit', 'filter'];
+    const feature = new ApiFeatures(Tour, req.query)
+      .filter()
+      .sort()
+      .limit()
+      .pagination();
 
-    exclude_quer_fields.forEach((el) => delete query_obj[el]);
+    const tours = await feature.query;
 
-    let querStr = JSON.stringify(query_obj);
-    querStr = JSON.parse(
-      querStr.replace(/\b(gte|lte|gt|lt)\b/g, (match) => `$${match}`)
-    );
-    // JSON.parse(querStr)
-
-    const tours = await Tour.find(querStr);
-
+    // 5. Response
     res.status(200).json({
       success: true,
       results: tours.length,
