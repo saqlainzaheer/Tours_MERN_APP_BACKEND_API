@@ -101,6 +101,8 @@
 // import { json } from 'express';
 import { ApiFeatures } from '../lib/Apifeature.js';
 import { Tour } from '../models/Tour.js';
+import { catchAsync } from './errorController.js';
+import AppError from '../utils/AppError.js';
 
 //cheap tour middlewear
 export const getCheapTour = async (req, res, next) => {
@@ -149,22 +151,15 @@ export const getTourStats = async (req, res) => {
   }
 };
 
-export const createTour = async (req, res) => {
-  try {
-    const newTour = await Tour.create(req.body);
+export const createTour = catchAsync(async (req, res) => {
+  const newTour = await Tour.create(req.body);
 
-    res.status(201).json({
-      status: true,
-      message: 'Tour Created Successfully',
-      data: newTour,
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: false,
-      message: err.message,
-    });
-  }
-};
+  res.status(201).json({
+    status: true,
+    message: 'Tour Created Successfully',
+    data: newTour,
+  });
+});
 
 export const getAllTours = async (req, res) => {
   try {
@@ -190,22 +185,17 @@ export const getAllTours = async (req, res) => {
   }
 };
 
-export const getTour = async (req, res) => {
-  try {
-    console.log(req.query);
-    const tour = await Tour.findById(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      data: tour,
-    });
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+export const getTour = catchAsync(async (req, res) => {
+  console.log(req.query);
+  const tour = await Tour.findById(req.params.id);
+  if (!tour) {
+    throw new AppError('tour not find', 400);
   }
-};
+  res.status(200).json({
+    success: true,
+    data: tour,
+  });
+});
 
 export const updateTour = async (req, res) => {
   try {
