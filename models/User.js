@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -46,6 +47,21 @@ userSchema.pre('save', async function (next) {
   this.confirmPassword = undefined;
   next();
 });
+
+export const comparePasswords = async (
+  userInputPassword,
+  storedHashedPassword
+) => {
+  try {
+    const result = await bcrypt.compare(
+      userInputPassword,
+      storedHashedPassword
+    );
+    return result;
+  } catch (err) {
+    throw new Error('Error comparing passwords');
+  }
+};
 
 const User = mongoose.model('User', userSchema);
 

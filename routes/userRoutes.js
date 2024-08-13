@@ -1,9 +1,10 @@
 import express from 'express';
-import { signUp } from '../controllers/authController.js';
+import { signIn, signUp } from '../controllers/authController.js';
 
 const router = express.Router();
 
 router.route('/signup').post(signUp);
+router.route('/signin').post(signIn);
 
 // import { checkID } from '../controllers/tourController';
 
