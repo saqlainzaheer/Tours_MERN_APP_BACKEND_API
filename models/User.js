@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -33,6 +32,16 @@ const userSchema = new mongoose.Schema({
       message: 'Passwords do not match',
     },
   },
+  passwordChangeAt: {
+    type: Date,
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'user', 'guest'],
+    default: 'user',
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
 });
 
 // Mongoose pre-save hook to hash the password before saving it
@@ -42,13 +51,13 @@ userSchema.pre('save', async function (next) {
 
   // Hash the password with cost of 12
   this.password = await bcrypt.hash(this.password, 12);
-
+  this.passwordChangeAt = Date.now() - 1000;
   // Delete confirmPassword field
   this.confirmPassword = undefined;
   next();
 });
 
-export const comparePasswords = async (
+userSchema.methods.comparePasswords = async (
   userInputPassword,
   storedHashedPassword
 ) => {
@@ -59,7 +68,15 @@ export const comparePasswords = async (
     );
     return result;
   } catch (err) {
-    throw new Error('Error comparing passwords');
+    throw new Error('Error comparing passwords', err.message);
+  }
+};
+
+userSchema.methods.changePasswordAfter = function (jwtTimeStamp) {
+  if (this.passwordChangeAt) {
+    const milliseconds = parseInt(this.passwordChangeAt.getTime() / 1000, 10);
+
+    return jwtTimeStamp < milliseconds; // Compare JWT timestamp to password change timestamp
   }
 };
 
